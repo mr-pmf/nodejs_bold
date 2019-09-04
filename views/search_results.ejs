@@ -1,0 +1,186 @@
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Pickup Points Found:</title>
+		<link rel="stylesheet" type="text/css" href="/css/style.css">
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:300" rel="stylesheet" type="text/css">
+	</head>
+	<body>
+	<!--<body style="background-color:17a1cf;"> <!-- style="background-color:17a1cf;"> -->
+		<!-- <h1 style="text-align:center;color:17a1cf;"> <!--background-color:white;"> -->
+		<h1 style="text-align:center;">
+		<!--<h1 style="text-align:center;color:white"> -->
+		
+		<!--<div style="background-color:17a1cf;color:white;" font size="6"> -->
+		<div>
+		<% if(PickupPoints!==null){ %>
+		Pickup Points Found:
+		<%= PickupPoints.length %>
+		<% } else{%>
+		
+		
+		<% if(Error!==null){ %>
+		<%= Error %>
+		<% }} %>
+		</div>
+		</h1>
+		
+		<script>
+			var Array_Markers123=[];
+		</script>
+		
+		<div>
+		<input type="button" id="btn-click" value="Click"/>
+		
+			<!--Criação da Tabela/Lista -->
+			<div style="float:left; width:29%; height:85%">
+			<table style="text-align:center" class="tabela">
+				<thead>
+					<tr>
+						<th>
+							#
+						</th>
+						<th>
+							PickupPoint Name
+						</th><!--
+						<th>
+							Address
+						</th>
+						<th>
+							City
+						</th>
+						<th>
+							Opening Hours
+						</th> -->
+						<th>
+							Distance (Km)
+						</th>
+					</tr>
+				</thead>
+				<tbody id="tabela_markers">
+					<% var PickupPointsOrderByDistance=PickupPoints; PickupPointsOrderByDistance.sort(function(a,b){return a.distanceInKm - b.distanceInKm;}); %>
+					<% for(i=0;i<PickupPointsOrderByDistance.length;i++){%>
+						<tr>
+							<td><%=i+1%></td>
+							<td><a><%=PickupPointsOrderByDistance[i].name%></a></td> <!--
+							<td><%=PickupPointsOrderByDistance[i].address%></td>
+							<td><%=PickupPointsOrderByDistance[i].city%></td>
+							<td><%=PickupPointsOrderByDistance[i].openingHoursEnglish%></td> -->
+							<td><%=PickupPointsOrderByDistance[i].distanceInKm%></td>
+						</tr> 
+					<% }%>
+				</tbody>
+			</table>
+			</div>
+			
+			
+			
+		<!-- <div id="googleMap" style="width:100%;height:400px;"></div> -->
+		<!--<div/>-->
+		<div id="googleMap" style="float:left;margin-left:1%;width:70%;height:85%;"></div>
+		
+		</div>
+		<script>
+		function myMap(){
+			var locations=[];
+			var aux=1;
+			
+			var PickupPoints123=<%-JSON.stringify(PickupPoints)%>;
+			
+			//So Falta Funcao Para Adicionar Dados Recebidos na Variavel "PickupPoints" ao Array "locations"
+			//Testes:
+			PickupPoints123.forEach(function(linha2){
+				var Linha=[linha2.name,linha2.latitude,linha2.longitude,linha2.address,linha2.postalCode,linha2.city,linha2.countryCode,linha2.openingHoursEnglish,linha2.distanceInKm,aux];
+				aux=aux+1;
+				
+				console.log(linha2.name);
+				console.log(locations.length);
+				
+				locations.push(Linha);
+				
+			});
+			
+			
+			//Fim Testes
+			
+			//console.log("Tamanho Locations="+locations.length);
+			/*
+			var locations=[
+				['Ponto 3', -33.890542,151.485857,3],
+				['Ponto 2', -32.890542,153.485857,2],
+				['Ponto 4', -29.890542,152.485857,4],
+				['Ponto 1', -31.890542,150.485857,1]
+			];
+			*/
+			
+			var Markers_Array=[];
+			
+			var map=new google.maps.Map(document.getElementById("googleMap"),{
+				zoom:15,
+				center:new google.maps.LatLng(-33.92,151.25),
+				mapTypeId:google.maps.MapTypeId.ROADMAP
+			});
+			
+			//var infowindow=new google.maps.InfoWindow();
+			
+			var bounds=new google.maps.LatLngBounds();
+			var infowindow=new google.maps.InfoWindow();
+			
+			//var marker,i;
+			var i;
+			
+			for(i=0;i<locations.length;i++){
+				var marker=new google.maps.Marker({
+					position:new google.maps.LatLng(locations[i][1],locations[i][2]),
+					map: map,
+					title: locations[i][0],
+					label: String(locations[i][9])
+				});
+				
+				bounds.extend(marker.position);
+				Markers_Array.push(marker);
+				Array_Markers123.push(marker);
+				
+				google.maps.event.addListener(marker, 'click', (function(marker,i){
+				return function(){
+					//infowindow.setContent(locations[i][0]);
+					infowindow.setContent("<div><h1><b>"+locations[i][0]+"</b></h1><p>"+locations[i][3]+"</p><p>"+locations[i][4]+","+locations[i][5]+"</p><p>"+locations[i][6]+"</p><p>"+locations[i][7]+"</p><p>Distance: "+locations[i][8]+"km</p></div>");
+					infowindow.open(map,marker);
+				}
+				})(marker,i));
+			}
+			
+			map.fitBounds(bounds);
+			
+			
+			
+		
+		
+		}
+		</script>
+		<script>
+		$('#tabela_markers tr').each(function(i,e){
+			$(e).click(function(i){
+				return function(e){
+					google.maps.event.trigger(Markers_Array[i],'click');
+				}
+			}(i));
+		});
+			
+			
+		</script>
+		
+		
+		<script>
+			$(document).ready(function(){
+				$("#btn-click").click(function(){
+					google.maps.event.trigger(Array_Markers123[1],'click');
+				});
+				});
+		</script>
+			
+			
+		
+		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPoaP6QOm2-jO41y8rc-yNDGlD51UKuD0&callback=myMap"></script>
+	</body>
+</html>
