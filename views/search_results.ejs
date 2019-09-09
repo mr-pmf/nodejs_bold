@@ -1,38 +1,41 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>Pickup Points Found:</title>
+		<title>Pickup Points Search Results</title>
 		<link rel="stylesheet" type="text/css" href="/css/style.css">
-		<link href="https://fonts.googleapis.com/css?family=Open+Sans:300" rel="stylesheet" type="text/css">
 	</head>
 	<body>
-	<!--<body style="background-color:17a1cf;"> <!-- style="background-color:17a1cf;"> -->
-		<!-- <h1 style="text-align:center;color:17a1cf;"> <!--background-color:white;"> -->
-		<h1 style="text-align:center;">
-		<!--<h1 style="text-align:center;color:white"> -->
+		<ul>
+			<li><a class="active" href="#">Pickup Point Searcher</a></li>
+			<li style="float:right"><a href="#">Login</a></li>
+		</ul>
 		
-		<!--<div style="background-color:17a1cf;color:white;" font size="6"> -->
+		<h1 style="text-align:center;">
 		<div>
-		<% if(PickupPoints!==null){ %>
-		Pickup Points Found:
-		<%= PickupPoints.length %>
+		<% if(Error!==null){ %>
+		<%= /*Error*/ %>
+		No Pickup Points Were Found
 		<% } else{%>
 		
 		
-		<% if(Error!==null){ %>
-		<%= Error %>
-		<% }} %>
+		<% if(PickupPoints!==null){ %>
+		Pickup Points Found: <%= PickupPoints.length %>
 		</div>
 		</h1>
 		
 		<script>
-			var Array_Markers123=[];
+			//Creates an Array That Will Hold Every Marker Created on The Map
+			var Markers_Array=[];
+			
+			//Clicking on a Table Row Will Pop Up More Info About The Corresponding Marker on The Map
+			function ShowMarker(Marker_Number)
+			{
+				google.maps.event.trigger(Markers_Array[Marker_Number],'click');
+			}
 		</script>
 		
 		<div>
-		<input type="button" id="btn-click" value="Click"/>
-		
-			<!--Criação da Tabela/Lista -->
+			<!--Criação da Tabela/List -->
 			<div style="float:left; width:29%; height:85%">
 			<table style="text-align:center" class="tabela">
 				<thead>
@@ -57,10 +60,10 @@
 						</th>
 					</tr>
 				</thead>
-				<tbody id="tabela_markers">
+				<tbody>
 					<% var PickupPointsOrderByDistance=PickupPoints; PickupPointsOrderByDistance.sort(function(a,b){return a.distanceInKm - b.distanceInKm;}); %>
 					<% for(i=0;i<PickupPointsOrderByDistance.length;i++){%>
-						<tr>
+						<tr onclick="ShowMarker(<%=i%>)">
 							<td><%=i+1%></td>
 							<td><a><%=PickupPointsOrderByDistance[i].name%></a></td> <!--
 							<td><%=PickupPointsOrderByDistance[i].address%></td>
@@ -71,13 +74,12 @@
 					<% }%>
 				</tbody>
 			</table>
+			<br>
+			*Click on a Table Row For More Information
 			</div>
 			
-			
-			
 		<!-- <div id="googleMap" style="width:100%;height:400px;"></div> -->
-		<!--<div/>-->
-		<div id="googleMap" style="float:left;margin-left:1%;width:70%;height:85%;"></div>
+		<div id="googleMap" style="float:left;margin-left:1%;width:70%;height:75%;"></div>
 		
 		</div>
 		<script>
@@ -87,48 +89,30 @@
 			
 			var PickupPoints123=<%-JSON.stringify(PickupPoints)%>;
 			
-			//So Falta Funcao Para Adicionar Dados Recebidos na Variavel "PickupPoints" ao Array "locations"
-			//Testes:
 			PickupPoints123.forEach(function(linha2){
 				var Linha=[linha2.name,linha2.latitude,linha2.longitude,linha2.address,linha2.postalCode,linha2.city,linha2.countryCode,linha2.openingHoursEnglish,linha2.distanceInKm,aux];
 				aux=aux+1;
 				
-				console.log(linha2.name);
-				console.log(locations.length);
+				//console.log(linha2.name);
+				//console.log(locations.length);
 				
 				locations.push(Linha);
-				
 			});
 			
-			
-			//Fim Testes
-			
-			//console.log("Tamanho Locations="+locations.length);
-			/*
-			var locations=[
-				['Ponto 3', -33.890542,151.485857,3],
-				['Ponto 2', -32.890542,153.485857,2],
-				['Ponto 4', -29.890542,152.485857,4],
-				['Ponto 1', -31.890542,150.485857,1]
-			];
-			*/
-			
-			var Markers_Array=[];
-			
+			//Defines Google Map
 			var map=new google.maps.Map(document.getElementById("googleMap"),{
 				zoom:15,
 				center:new google.maps.LatLng(-33.92,151.25),
 				mapTypeId:google.maps.MapTypeId.ROADMAP
 			});
 			
-			//var infowindow=new google.maps.InfoWindow();
-			
 			var bounds=new google.maps.LatLngBounds();
 			var infowindow=new google.maps.InfoWindow();
-			
-			//var marker,i;
+
 			var i;
+			var j;
 			
+			//Creates a Marker For Each Pickup Point Read 
 			for(i=0;i<locations.length;i++){
 				var marker=new google.maps.Marker({
 					position:new google.maps.LatLng(locations[i][1],locations[i][2]),
@@ -137,50 +121,37 @@
 					label: String(locations[i][9])
 				});
 				
-				bounds.extend(marker.position);
-				Markers_Array.push(marker);
-				Array_Markers123.push(marker);
-				
+				bounds.extend(marker.position); //Adapts Map In Order to Show Every Marker on It
+				Markers_Array.push(marker); //Stores The Marker on The Markers Array (Because of Table Row Clicks)
+			
+				//Whenever a User Clicks on a Marker, Shows an InfoWindow And The Information Inside
 				google.maps.event.addListener(marker, 'click', (function(marker,i){
 				return function(){
-					//infowindow.setContent(locations[i][0]);
-					infowindow.setContent("<div><h1><b>"+locations[i][0]+"</b></h1><p>"+locations[i][3]+"</p><p>"+locations[i][4]+","+locations[i][5]+"</p><p>"+locations[i][6]+"</p><p>"+locations[i][7]+"</p><p>Distance: "+locations[i][8]+"km</p></div>");
+					var aux_copy_schedule=locations[i][7];
+					var aux_holds_every_line_no_commas=aux_copy_schedule.split(",");
+					var schedule_hours="";//"<p>Schedule:</p>";
+					
+					//Converts Schedules From Format "Mon-Fri:21:00,Sat:..." to Individual Lines, Removing Commas
+					for(j=0;j<aux_holds_every_line_no_commas.length;j++)
+					{
+						schedule_hours=schedule_hours+"<p>->"+aux_holds_every_line_no_commas[j]+"</p>";
+					}
+				
+					//Defines Information Shown on The InfoWindow:
+					//infowindow.setContent("<div><h1><b>"+locations[i][0]+"</b></h1><p>"+locations[i][3]+"</p><p>"+locations[i][4]+","+locations[i][5]+"</p><p>"+locations[i][6]+"</p><p>"+locations[i][7]+"</p><p>Distance: "+locations[i][8]+"km</p></div>");
+					infowindow.setContent("<div><h1><b>"+locations[i][0]+"</b></h1><p>"+locations[i][3]+"</p><p>"+locations[i][4]+","+locations[i][5]+"</p><p>"+locations[i][6]+"</p><p>"+schedule_hours+"</p><p>Distance: "+locations[i][8]+"km</p></div>");
 					infowindow.open(map,marker);
 				}
 				})(marker,i));
 			}
 			
-			map.fitBounds(bounds);
-			
-			
-			
-		
-		
+			map.fitBounds(bounds); //Adapts Map In Order to Show Every Marker on It
 		}
 		</script>
-		<script>
-		$('#tabela_markers tr').each(function(i,e){
-			$(e).click(function(i){
-				return function(e){
-					google.maps.event.trigger(Markers_Array[i],'click');
-				}
-			}(i));
-		});
-			
-			
-		</script>
 		
+		<!--Creates Google Map-->
+		<script src="https://maps.googleapis.com/maps/api/js?key=<%=process.env.GOOGLE_MAPS_API_KEY%>&callback=myMap"></script>
 		
-		<script>
-			$(document).ready(function(){
-				$("#btn-click").click(function(){
-					google.maps.event.trigger(Array_Markers123[1],'click');
-				});
-				});
-		</script>
-			
-			
-		
-		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPoaP6QOm2-jO41y8rc-yNDGlD51UKuD0&callback=myMap"></script>
+		<% }} %>
 	</body>
 </html>
